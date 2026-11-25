@@ -239,11 +239,26 @@ func drive(ctx context.Context, in io.Writer, out io.Reader, cfg Config) (*Trans
 		_, _ = io.WriteString(in, strings.Join(lines, "\n")+"\n")
 	}
 
-	// next waits for the referee's answer to GET_GAME_INFO. It returns the
-	// player to move, or -1 when the game is over.
+	// next waits for the referee's answer to GET_GAME_INFO: both
+	// NEXT_PLAYER_INPUT and NEXT_PLAYER_INFO, in either order (Game of
+	// Drones sends INFO first after the first turn). It returns the player
+	// to move, or -1 when the game is over.
 	var pendingInput []string
 	next := func() (player, expected int, err error) {
+		var info []string
+		haveInput := false
 		for {
+			if haveInput && info != nil {
+				p, err1 := strconv.Atoi(info[0])
+				e, err2 := strconv.Atoi(info[1])
+				if err := errors.Join(err1, err2); err != nil {
+					return 0, 0, fmt.Errorf("bad NEXT_PLAYER_INFO %q: %w", info, err)
+				}
+				t.Events = append(t.Events,
+					Event{Kind: "INPUT", Player: p, Lines: pendingInput},
+					Event{Kind: "INFO", Player: p, Lines: info})
+				return p, e, nil
+			}
 			var be blockOrErr
 			var ok bool
 			select {
@@ -262,19 +277,12 @@ func drive(ctx context.Context, in io.Writer, out io.Reader, cfg Config) (*Trans
 			switch b.Command {
 			case "NEXT_PLAYER_INPUT":
 				pendingInput = b.Lines
+				haveInput = true
 			case "NEXT_PLAYER_INFO":
 				if len(b.Lines) < 2 {
 					return 0, 0, fmt.Errorf("short NEXT_PLAYER_INFO: %q", b.Lines)
 				}
-				p, err1 := strconv.Atoi(b.Lines[0])
-				e, err2 := strconv.Atoi(b.Lines[1])
-				if err := errors.Join(err1, err2); err != nil {
-					return 0, 0, fmt.Errorf("bad NEXT_PLAYER_INFO %q: %w", b.Lines, err)
-				}
-				t.Events = append(t.Events,
-					Event{Kind: "INPUT", Player: p, Lines: pendingInput},
-					Event{Kind: "INFO", Player: p, Lines: b.Lines})
-				return p, e, nil
+				info = b.Lines
 			case "UINPUT":
 				lines := append([]string(nil), b.Lines...)
 				sort.Strings(lines) // Java prints these in Hashtable order

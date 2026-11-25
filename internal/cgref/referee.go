@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"github.com/adamadair/codingame-referees/internal/jprops"
+	"github.com/adamadair/codingame-referees/internal/jscanner"
 )
 
 // Options selects framework behaviours that differ between the Java copies.
@@ -69,7 +70,7 @@ type Referee struct {
 	game Game
 	opts Options
 
-	in  *scanner
+	in  *jscanner.Scanner
 	out *bufio.Writer
 	err io.Writer
 
@@ -102,7 +103,7 @@ func Run(game Game, in io.Reader, out, errOut io.Writer, opts Options) {
 	r := &Referee{
 		game:     game,
 		opts:     opts,
-		in:       newScanner(in),
+		in:       jscanner.New(in),
 		out:      bufio.NewWriter(out),
 		err:      errOut,
 		messages: map[string]string{},
@@ -231,7 +232,7 @@ func (r *Referee) crash(err error) {
 
 func (r *Referee) loop() error {
 	for {
-		line, err := r.in.nextLine()
+		line, err := r.in.NextLine()
 		if err != nil {
 			return err
 		}
@@ -263,7 +264,7 @@ func (r *Referee) loop() error {
 }
 
 func (r *Referee) handleInit(lineCount int) error {
-	n, err := r.in.nextInt()
+	n, err := r.in.NextInt()
 	if err != nil {
 		return err
 	}
@@ -277,7 +278,7 @@ func (r *Referee) handleInit(lineCount int) error {
 	r.frame = 0
 	r.round = -1
 	r.newRound = true
-	if _, err := r.in.nextLine(); err != nil {
+	if _, err := r.in.NextLine(); err != nil {
 		return err
 	}
 
@@ -287,7 +288,7 @@ func (r *Referee) handleInit(lineCount int) error {
 	if lineCount > 0 {
 		r.initLines = make([]string, lineCount-1)
 		for i := range r.initLines {
-			if r.initLines[i], err = r.in.nextLine(); err != nil {
+			if r.initLines[i], err = r.in.NextLine(); err != nil {
 				return err
 			}
 		}
@@ -374,7 +375,7 @@ func (r *Referee) handlePlayerOutput(lineCount int) error {
 	output := make([]string, lineCount)
 	for i := range output {
 		var err error
-		if output[i], err = r.in.nextLine(); err != nil {
+		if output[i], err = r.in.NextLine(); err != nil {
 			return err
 		}
 	}

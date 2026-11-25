@@ -1,84 +1,10 @@
 package cgref
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
-	"unicode"
 )
-
-// scanner reproduces the two java.util.Scanner calls the framework makes:
-// nextLine and nextInt.
-type scanner struct {
-	r *bufio.Reader
-}
-
-var errNoSuchElement = errors.New("java.util.NoSuchElementException")
-
-func newScanner(r io.Reader) *scanner { return &scanner{r: bufio.NewReader(r)} }
-
-// isLineSep matches Scanner's line separators: \n, \r,  ,  , \u0085
-// (\r\n is handled by the caller).
-func isLineSep(c rune) bool {
-	return c == '\n' || c == '\r' || c == ' ' || c == ' ' || c == '\u0085'
-}
-
-// nextLine returns the rest of the current line without its terminator. At
-// end of input with nothing left, it fails like Scanner.nextLine.
-func (s *scanner) nextLine() (string, error) {
-	var b strings.Builder
-	read := false
-	for {
-		c, _, err := s.r.ReadRune()
-		if err != nil {
-			if read {
-				return b.String(), nil
-			}
-			return "", errNoSuchElement
-		}
-		read = true
-		if isLineSep(c) {
-			if c == '\r' {
-				if n, _, err := s.r.ReadRune(); err == nil && n != '\n' {
-					_ = s.r.UnreadRune()
-				}
-			}
-			return b.String(), nil
-		}
-		b.WriteRune(c)
-	}
-}
-
-// nextInt skips whitespace (including line breaks), reads one token and
-// parses it as an int. The rest of the line stays unread.
-func (s *scanner) nextInt() (int, error) {
-	var b strings.Builder
-	for {
-		c, _, err := s.r.ReadRune()
-		if err != nil {
-			if b.Len() == 0 {
-				return 0, errNoSuchElement
-			}
-			break
-		}
-		if unicode.IsSpace(c) {
-			if b.Len() == 0 {
-				continue
-			}
-			_ = s.r.UnreadRune()
-			break
-		}
-		b.WriteRune(c)
-	}
-	v, err := strconv.ParseInt(b.String(), 10, 32)
-	if err != nil {
-		return 0, fmt.Errorf("java.util.InputMismatchException: %q", b.String())
-	}
-	return int(v), nil
-}
 
 // outputData is AbstractReferee.OutputData: a block of lines under a
 // "[[COMMAND] count]" header.

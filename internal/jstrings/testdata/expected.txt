@@ -1,0 +1,255 @@
+case 0
+int 0
+long 0
+split= 1 x30
+split_ 1 x30
+case 1
+int 42
+long 42
+split= 1 x3432
+split_ 1 x3432
+case 2
+int -42
+long -42
+split= 1 x2d3432
+split_ 1 x2d3432
+case 3
+int 42
+long 42
+split= 1 x2b3432
+split_ 1 x2b3432
+case 4
+int 0
+long 0
+split= 1 x2d30
+split_ 1 x2d30
+case 5
+int error
+long error
+split= 1 x2b
+split_ 1 x2b
+case 6
+int error
+long error
+split= 1 x2d
+split_ 1 x2d
+case 7
+int error
+long error
+split= 1 x
+split_ 1 x
+case 8
+int error
+long error
+split= 1 x2031
+split_ 2 x x31
+case 9
+int error
+long error
+split= 1 x3120
+split_ 1 x31
+case 10
+int error
+long error
+split= 1 x315f303030
+split_ 1 x315f303030
+case 11
+int error
+long error
+split= 1 x30783130
+split_ 1 x30783130
+case 12
+int error
+long error
+split= 1 x316533
+split_ 1 x316533
+case 13
+int error
+long error
+split= 1 x313261
+split_ 1 x313261
+case 14
+int 2147483647
+long 2147483647
+split= 1 x32313437343833363437
+split_ 1 x32313437343833363437
+case 15
+int error
+long 2147483648
+split= 1 x32313437343833363438
+split_ 1 x32313437343833363438
+case 16
+int -2147483648
+long -2147483648
+split= 1 x2d32313437343833363438
+split_ 1 x2d32313437343833363438
+case 17
+int error
+long -2147483649
+split= 1 x2d32313437343833363439
+split_ 1 x2d32313437343833363439
+case 18
+int error
+long 9223372036854775807
+split= 1 x39323233333732303336383534373735383037
+split_ 1 x39323233333732303336383534373735383037
+case 19
+int error
+long error
+split= 1 x39323233333732303336383534373735383038
+split_ 1 x39323233333732303336383534373735383038
+case 20
+int error
+long -9223372036854775808
+split= 1 x2d39323233333732303336383534373735383038
+split_ 1 x2d39323233333732303336383534373735383038
+case 21
+int error
+long error
+split= 1 x2d39323233333732303336383534373735383039
+split_ 1 x2d39323233333732303336383534373735383039
+case 22
+int 7
+long 7
+split= 1 x303037
+split_ 1 x303037
+case 23
+int 123
+long 123
+split= 1 xd9a1d9a2d9a3
+split_ 1 xd9a1d9a2d9a3
+case 24
+int 12
+long 12
+split= 1 xefbc91efbc92
+split_ 1 xefbc91efbc92
+case 25
+int error
+long error
+split= 1 xf09d9f8ef09d9f99
+split_ 1 xf09d9f8ef09d9f99
+case 26
+int 12
+long 12
+split= 1 xe0a5a7e0a5a8
+split_ 1 xe0a5a7e0a5a8
+case 27
+int error
+long error
+split= 1 xc2b2
+split_ 1 xc2b2
+case 28
+int error
+long error
+split= 1 xe291a0
+split_ 1 xe291a0
+case 29
+int error
+long error
+split= 1 x2d2d31
+split_ 1 x2d2d31
+case 30
+int error
+long error
+split= 1 x2b2d31
+split_ 1 x2b2d31
+case 31
+int error
+long error
+split= 2 x6e625a6f6e6573 x34
+split_ 1 x6e625a6f6e65733d34
+case 32
+int error
+long error
+split= 2 x6e6244726f6e6573 x35
+split_ 1 x6e6244726f6e65733d35
+case 33
+int error
+long error
+split= 2 x67616d6553656564 x2d313233
+split_ 1 x67616d65536565643d2d313233
+case 34
+int error
+long error
+split= 2 x x34
+split_ 1 x3d34
+case 35
+int error
+long error
+split= 1 x6e625a6f6e6573
+split_ 1 x6e625a6f6e65733d
+case 36
+int error
+long error
+split= 3 x6e625a6f6e6573 x x34
+split_ 1 x6e625a6f6e65733d3d34
+case 37
+int error
+long error
+split= 3 x61 x62 x63
+split_ 1 x613d623d63
+case 38
+int error
+long error
+split= 0
+split_ 1 x3d
+case 39
+int error
+long error
+split= 0
+split_ 1 x3d3d
+case 40
+int error
+long error
+split= 1 x61
+split_ 1 x613d3d
+case 41
+int error
+long error
+split= 1 x6e625a6f6e6573
+split_ 1 x6e625a6f6e6573
+case 42
+int error
+long error
+split= 1 x31303020323030
+split_ 2 x313030 x323030
+case 43
+int error
+long error
+split= 1 x313030203230302068656c6c6f
+split_ 3 x313030 x323030 x68656c6c6f
+case 44
+int error
+long error
+split= 1 x2031303020323030
+split_ 3 x x313030 x323030
+case 45
+int error
+long error
+split= 1 x3130302020323030
+split_ 3 x313030 x x323030
+case 46
+int error
+long error
+split= 1 x31303020
+split_ 1 x313030
+case 47
+int 100
+long 100
+split= 1 x313030
+split_ 1 x313030
+case 48
+int error
+long error
+split= 1 x20
+split_ 0
+case 49
+int error
+long error
+split= 1 x2020
+split_ 0
+case 50
+int error
+long error
+split= 1 x612020622020
+split_ 3 x61 x x62
