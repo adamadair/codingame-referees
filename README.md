@@ -13,14 +13,17 @@ on stdin and stdout, so local runners such as cg-brutaltester can use it.
 | Command | Game |
 |---|---|
 | `cg-game-of-drones` | Game of Drones |
+| `cg-coders-of-the-caribbean` | Coders of the Caribbean (league level 3) |
 
 ```bash
 go install github.com/adamadair/codingame-referees/cmd/cg-game-of-drones@latest
 ```
 
 ```bash
-cg-game-of-drones -h
+go install github.com/adamadair/codingame-referees/cmd/cg-coders-of-the-caribbean@latest
 ```
+
+Every command has `-h` for its parameters and usage.
 
 `-l <file>` appends errors to a log file as well as stderr. By default no
 log file is written.
@@ -30,10 +33,12 @@ log file is written.
 | Package | Purpose |
 |---|---|
 | `cmd/cg-*` | One command per ported referee |
+| `internal/cli` | Shared command behaviour: `-l`, `-h` and exit codes |
 | `internal/games/*` | The ported game referees |
 | `internal/cgref` | Port of the framework embedded in the Java referees (`AbstractReferee`, `MultiReferee`) and its stdin/stdout protocol |
 | `internal/harness` | Plays the game runner's side of the protocol against a Java or Go referee, records the game and compares two games |
 | `internal/jrandom` | `java.util.Random`, bit for bit |
+| `internal/jmath` | Java's `Math.atan2` (fdlibm), `Math.round` and `(int)`/`(long)` casts |
 | `internal/jprops` | `java.util.Properties.load` parsing rules |
 | `internal/jscanner` | `java.util.Scanner`'s `nextLine` and `nextInt`, used to read runner commands |
 | `internal/jstrings` | Java `String.split`, `Integer.parseInt` and `Long.parseLong` edge cases |
@@ -105,10 +110,23 @@ to redirect a hard-coded Java log path at test time.
 - `String.split` drops trailing empty strings. Use `jstrings.Split`.
 - Go may fuse `a*b + c` into one FMA instruction on some CPUs, which Java
   never does. Wrap products in `float64(...)` where the result matters.
+- `Math.atan2` is fdlibm, and Go's `math.Atan2` differs in the last bit
+  on about 14% of Coders of the Caribbean's hex-grid angles. Use
+  `jmath.Atan2` wherever Java's trigonometry feeds game logic.
+- Static counters such as `Entity.UNIQUE_ENTITY_ID` advance on every
+  constructor call, including objects that are thrown away. When IDs
+  reach the players, take them at exactly the same points as Java.
+- Java's `CASE_INSENSITIVE` folds ASCII only and its `\s` includes `\x0B`.
+  Go's `(?i)` also folds `ſ` and the Kelvin sign, and its `\s` lacks
+  `\x0B`. Spell keywords as `[Mm][Oo][Vv][Ee]` and whitespace as
+  `[ \t\n\x0B\f\r]`, and anchor with `^...$` for `matches()`.
+- Java fields that are `null` until init sets them can make the
+  framework's init-error frame throw, so the referee stops without
+  scores. Mirror that rather than drawing the frame from empty lists.
 
 # List of Referees to Port
 1. Ghost in the cell
-2. Coders of the Caribbean
+2. Coders of the Caribbean (ported: `cg-coders-of-the-caribbean`)
 3. Code 4 life
 4. Wondev Woman
 5. Mean Max

@@ -3,13 +3,7 @@
 package main
 
 import (
-	"errors"
-	"flag"
-	"fmt"
-	"io"
-	"os"
-	"time"
-
+	"github.com/adamadair/codingame-referees/internal/cli"
 	"github.com/adamadair/codingame-referees/internal/games/gameofdrones"
 )
 
@@ -40,57 +34,8 @@ Game parameters
 Replaying a game
   At the end, the referee prints the three lines above in an [[UINPUT]]
   block. Sending them back as parameters replays the same map.
-
-Exit status
-  0 when the game ends normally, 1 if the input is malformed, ends before
-  the game is over, or the referee fails.
-
-Options
 `
 
 func main() {
-	os.Exit(run(os.Args[1:], os.Stdin, os.Stdout, os.Stderr))
-}
-
-func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
-	flags := flag.NewFlagSet("cg-game-of-drones", flag.ContinueOnError)
-	flags.SetOutput(stderr)
-	logFile := flags.String("l", "", "append errors to `logfile` as well as stderr (by default no log file is written)")
-	flags.Usage = func() {
-		fmt.Fprint(flags.Output(), usage)
-		flags.PrintDefaults()
-	}
-	if err := flags.Parse(args); err != nil {
-		if err == flag.ErrHelp {
-			return 0
-		}
-		return 2
-	}
-	if flags.NArg() > 0 {
-		fmt.Fprintf(stderr, "cg-game-of-drones: unexpected argument %q\n", flags.Arg(0))
-		flags.Usage()
-		return 2
-	}
-
-	err := gameofdrones.Run(stdin, stdout)
-	if err == nil {
-		return 0
-	}
-	fmt.Fprintln(stderr, "cg-game-of-drones:", err)
-	if *logFile != "" {
-		if logErr := appendLog(*logFile, err); logErr != nil {
-			fmt.Fprintln(stderr, "cg-game-of-drones: cannot write log:", logErr)
-		}
-	}
-	return 1
-}
-
-// appendLog adds a timestamped error report to the log file.
-func appendLog(path string, err error) error {
-	f, openErr := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-	if openErr != nil {
-		return openErr
-	}
-	_, writeErr := fmt.Fprintf(f, "%s cg-game-of-drones: %v\n", time.Now().Format(time.RFC3339), err)
-	return errors.Join(writeErr, f.Close())
+	cli.Main("cg-game-of-drones", usage, gameofdrones.Run)
 }

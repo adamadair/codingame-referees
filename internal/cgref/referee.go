@@ -17,7 +17,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"runtime/debug"
 	"strconv"
@@ -91,15 +90,15 @@ type Referee struct {
 	reasonCode, reason            string
 }
 
-// Main runs game on the process's standard streams.
-func Main(game Game, opts Options) {
-	Run(game, os.Stdin, os.Stdout, os.Stderr, opts)
-}
-
 // Run plays one game, reading runner commands from in and writing referee
-// output to out. Errors and stack traces go to errOut, as Java's
-// printStackTrace does.
-func Run(game Game, in io.Reader, out, errOut io.Writer, opts Options) {
+// output to out. Debug messages from PrintError go to errOut.
+//
+// It returns nil once the scores are printed, including after an init
+// error. It returns an error when the referee stops without scores, where
+// the Java referee would print a stack trace: malformed commands, input
+// that ends before the game is over, an unexpected error from the game, or
+// a panic (the error then includes the stack).
+func Run(game Game, in io.Reader, out, errOut io.Writer, opts Options) error {
 	r := &Referee{
 		game:     game,
 		opts:     opts,
@@ -111,7 +110,7 @@ func Run(game Game, in io.Reader, out, errOut io.Writer, opts Options) {
 	if s, ok := game.(refereeSetter); ok {
 		s.SetReferee(r)
 	}
-	r.start()
+	return r.start()
 }
 
 // Translate formats the message registered under code, or returns the code
@@ -156,7 +155,7 @@ func (r *Referee) println(s fmt.Stringer) {
 	r.out.Flush()
 }
 
-func (r *Referee) start() {
+func (r *Referee) start() error {
 	r.messages["InvalidInput"] = "invalid input. Expected '%s' but found '%s'"
 	r.messages["playerTimeoutMulti"] = "Timeout: the program did not provide %d input lines in due time... $%d will no longer be active in this game."
 	r.messages["playerTimeoutSolo"] = "Timeout: the program did not provide %d input lines in due time..."
@@ -183,16 +182,14 @@ func (r *Referee) start() {
 			r.updateScores()
 			return nil
 		}); err != nil {
-			r.crash(err)
-			return
+			return crashError(err)
 		}
 	case errors.Is(err, errGameError{}):
 		// Init error: already reported, scores still follow.
 	default:
 		// Any other failure ends the referee without scores, like the
 		// catch (Throwable) in Java.
-		r.crash(err)
-		return
+		return crashError(err)
 	}
 
 	scores := newOutput("SCORES")
@@ -201,6 +198,7 @@ func (r *Referee) start() {
 	}
 	r.appendDataToEnd()
 	r.println(scores)
+	return nil
 }
 
 // protect runs f, turning a panic into an error the way Java turns a
@@ -221,13 +219,16 @@ type panicError struct {
 
 func (e *panicError) Error() string { return fmt.Sprint(e.value) }
 
-func (r *Referee) crash(err error) {
+// crashError describes why the referee stopped without scores.
+func crashError(err error) error {
 	var p *panicError
 	if errors.As(err, &p) {
-		fmt.Fprintf(r.err, "panic: %v\n%s", p.value, p.stack)
-		return
+		return fmt.Errorf("panic: %v\n%s", p.value, p.stack)
 	}
-	fmt.Fprintln(r.err, err)
+	if errors.Is(err, jscanner.ErrNoSuchElement) {
+		return errors.New("input ended before the game was over")
+	}
+	return err
 }
 
 func (r *Referee) loop() error {

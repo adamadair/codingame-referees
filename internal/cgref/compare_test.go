@@ -146,7 +146,9 @@ func (s scenario) config() harness.Config {
 
 func goToy(opts cgref.Options) func(io.Reader, io.Writer, io.Writer) {
 	return func(in io.Reader, out, errOut io.Writer) {
-		cgref.Run(newToy(), in, out, errOut, opts)
+		if err := cgref.Run(newToy(), in, out, errOut, opts); err != nil {
+			fmt.Fprintln(errOut, err)
+		}
 	}
 }
 
