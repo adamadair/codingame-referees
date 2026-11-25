@@ -3,7 +3,8 @@ package caribbean
 import (
 	"fmt"
 	"strings"
-	"unicode/utf16"
+
+	"github.com/adamadair/codingame-referees/internal/jstrings"
 )
 
 // join is Referee.join: String.valueOf of each value, separated by spaces.
@@ -157,18 +158,10 @@ func (d damage) viewString() string {
 }
 
 // truncateMessage is Ship.setMessage's cut: messages longer than 50 UTF-16
-// code units keep the first 50 and get "...". A surrogate pair split by
-// the cut leaves a lone surrogate, which Java prints as '?'.
+// code units keep the first 50 and get "...".
 func truncateMessage(message string) string {
-	units := utf16.Encode([]rune(message))
-	if len(units) <= 50 {
-		return message
+	if jstrings.Len16(message) > 50 {
+		return jstrings.Substring16(message, 0, 50) + "..."
 	}
-	head := units[:50]
-	suffix := "..."
-	if head[49] >= 0xD800 && head[49] < 0xDC00 { // high surrogate cut from its pair
-		head = head[:49]
-		suffix = "?..."
-	}
-	return string(utf16.Decode(head)) + suffix
+	return message
 }

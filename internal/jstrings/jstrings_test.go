@@ -3,6 +3,7 @@ package jstrings
 import (
 	"bufio"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -92,5 +93,35 @@ func TestDigitRuns(t *testing.T) {
 		if r.Stride != 1 || (int(r.Hi)-int(r.Lo)+1)%10 != 0 {
 			t.Errorf("unexpected Nd range %#x-%#x stride %d", r.Lo, r.Hi, r.Stride)
 		}
+	}
+}
+
+func TestLen16AndSubstring16(t *testing.T) {
+	s := "ab😀cd" // the emoji is 2 UTF-16 units
+	if n := Len16(s); n != 6 {
+		t.Errorf("Len16 = %d, want 6", n)
+	}
+	for _, c := range []struct {
+		begin, end int
+		want       string
+	}{
+		{0, 6, "ab😀cd"}, {0, 2, "ab"}, {0, 4, "ab😀"}, {0, 3, "ab?"}, {3, 6, "?cd"}, {2, 4, "😀"}, {1, 1, ""},
+	} {
+		if got := Substring16(s, c.begin, c.end); got != c.want {
+			t.Errorf("Substring16(%d, %d) = %q, want %q", c.begin, c.end, got, c.want)
+		}
+	}
+	defer func() {
+		if recover() == nil {
+			t.Error("Substring16 past the end should panic")
+		}
+	}()
+	Substring16(s, 0, 7)
+}
+
+func TestNumberFormatMessage(t *testing.T) {
+	_, err := ParseInt("wide")
+	if !errors.Is(err, ErrNumberFormat) || err.Error() != `For input string: "wide"` {
+		t.Errorf("got %v", err)
 	}
 }

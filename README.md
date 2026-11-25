@@ -14,6 +14,7 @@ on stdin and stdout, so local runners such as cg-brutaltester can use it.
 |---|---|
 | `cg-game-of-drones` | Game of Drones |
 | `cg-coders-of-the-caribbean` | Coders of the Caribbean (league level 3) |
+| `cg-hypersonic` | Hypersonic (game versions 1-4) |
 
 ```bash
 go install github.com/adamadair/codingame-referees/cmd/cg-game-of-drones@latest
@@ -21,6 +22,10 @@ go install github.com/adamadair/codingame-referees/cmd/cg-game-of-drones@latest
 
 ```bash
 go install github.com/adamadair/codingame-referees/cmd/cg-coders-of-the-caribbean@latest
+```
+
+```bash
+go install github.com/adamadair/codingame-referees/cmd/cg-hypersonic@latest
 ```
 
 Every command has `-h` for its parameters and usage.
@@ -38,10 +43,12 @@ log file is written.
 | `internal/cgref` | Port of the framework embedded in the Java referees (`AbstractReferee`, `MultiReferee`) and its stdin/stdout protocol |
 | `internal/harness` | Plays the game runner's side of the protocol against a Java or Go referee, records the game and compares two games |
 | `internal/jrandom` | `java.util.Random`, bit for bit |
+| `internal/jcollections` | Java `HashSet` iteration order |
+| `internal/jregex` | Writing Go patterns that match exactly what Java patterns match |
 | `internal/jmath` | Java's `Math.atan2` (fdlibm), `Math.round` and `(int)`/`(long)` casts |
 | `internal/jprops` | `java.util.Properties.load` parsing rules |
 | `internal/jscanner` | `java.util.Scanner`'s `nextLine` and `nextInt`, used to read runner commands |
-| `internal/jstrings` | Java `String.split`, `Integer.parseInt` and `Long.parseLong` edge cases |
+| `internal/jstrings` | Java `String.split`, `parseInt`/`parseLong` (with Java's error messages), and UTF-16 `length()`/`substring()` |
 
 ## Tests
 
@@ -98,10 +105,15 @@ to redirect a hard-coded Java log path at test time.
 - Java `int` is 32 bits, and shift counts are masked to 5 bits. Use `int32`
   where overflow or shifts can happen.
 - `Collections.sort` is stable. Use `slices.SortStableFunc`.
-- Iterating a `HashMap` or `HashSet` follows Java's bucket order. That
-  order matters in Platinum Rift. It isn't reproducible at all for keys
-  without `hashCode()` (Poker Chip Race, Code Busters, Hyper Sonic): use a
-  fixed order and document it.
+- Iterating a `HashMap` or `HashSet` follows Java's bucket order. It
+  matters in Platinum Rift, and in Hypersonic, where it decides the order
+  of items in the players' input: use `jcollections.HashSet`. That order
+  depends on history, because `clear()` keeps the grown table. It isn't
+  reproducible at all for keys without `hashCode()` (Poker Chip Race, Code
+  Busters, Hypersonic's bombs): use a fixed order and document it.
+- A Java assignment like `x = Integer.valueOf(...)` leaves `x` unchanged
+  when parsing throws. Go's `x, err = ...` overwrites it, so assign only
+  on success. The init-error frame can show the old value.
 - `OutputData.toString()` trims its text, so trailing spaces on a block's
   last line are lost. `cgref` does the same.
 - `Integer.parseInt` accepts any Unicode decimal digit in the Basic
@@ -134,7 +146,7 @@ to redirect a hard-coded Java log path at test time.
 7. Back to the Code
 8. Codebusters
 9. Game of Drones (ported: `cg-game-of-drones`)
-10. Hypersonic
+10. Hypersonic (ported: `cg-hypersonic`)
 11. Smash the Code
 12. The Great Escape
 13. Tron

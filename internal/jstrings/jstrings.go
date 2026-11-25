@@ -5,13 +5,23 @@ package jstrings
 
 import (
 	"errors"
+	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf16"
 )
 
-// ErrNumberFormat matches Java's NumberFormatException.
+// ErrNumberFormat matches Java's NumberFormatException. Parse errors wrap
+// it (test with errors.Is) and carry Java's message, such as
+// `For input string: "abc"`, which referees show in the viewer.
 var ErrNumberFormat = errors.New("java.lang.NumberFormatException")
+
+type numberFormatError struct{ input string }
+
+func (e *numberFormatError) Error() string { return "For input string: " + strconv.Quote(e.input) }
+func (e *numberFormatError) Unwrap() error { return ErrNumberFormat }
 
 // Split behaves like Java's s.split(sep) for a separator with no regex
 // meaning (such as "=" or " "). Unlike strings.Split, trailing empty strings
@@ -46,9 +56,10 @@ func ParseLong(s string) (int64, error) {
 // parse ports Java's algorithm, which accumulates negatively so that the
 // minimum value parses without overflow.
 func parse(s string, minVal, maxVal int64) (int64, error) {
+	fail := &numberFormatError{s}
 	runes := []rune(s)
 	if len(runes) == 0 {
-		return 0, ErrNumberFormat
+		return 0, fail
 	}
 	i := 0
 	negative := false
@@ -60,10 +71,10 @@ func parse(s string, minVal, maxVal int64) (int64, error) {
 			limit = minVal
 		case '+':
 		default:
-			return 0, ErrNumberFormat
+			return 0, fail
 		}
 		if len(runes) == 1 {
-			return 0, ErrNumberFormat
+			return 0, fail
 		}
 		i++
 	}
@@ -72,11 +83,11 @@ func parse(s string, minVal, maxVal int64) (int64, error) {
 	for ; i < len(runes); i++ {
 		d := digit(runes[i])
 		if d < 0 || result < multmin {
-			return 0, ErrNumberFormat
+			return 0, fail
 		}
 		result *= 10
 		if result < limit+int64(d) {
-			return 0, ErrNumberFormat
+			return 0, fail
 		}
 		result -= int64(d)
 	}
@@ -102,4 +113,45 @@ func digit(c rune) int {
 		}
 	}
 	return -1
+}
+
+// Len16 is Java's String.length(): the number of UTF-16 code units, so a
+// character outside the Basic Multilingual Plane (such as an emoji) counts
+// as 2.
+func Len16(s string) int {
+	n := 0
+	for _, r := range s {
+		if r >= 0x10000 {
+			n += 2
+		} else {
+			n++
+		}
+	}
+	return n
+}
+
+// Substring16 is Java's s.substring(begin, end), with indexes in UTF-16
+// code units. A surrogate pair cut in half leaves a lone surrogate, which
+// Java prints as '?', so it becomes '?' here. It panics on bad indexes,
+// as Java throws.
+func Substring16(s string, begin, end int) string {
+	units := utf16.Encode([]rune(s))
+	if begin < 0 || end > len(units) || begin > end {
+		panic(fmt.Sprintf("java.lang.StringIndexOutOfBoundsException: begin %d, end %d, length %d", begin, end, len(units)))
+	}
+	units = units[begin:end]
+	var b strings.Builder
+	for i := 0; i < len(units); i++ {
+		u := units[i]
+		switch {
+		case u >= 0xD800 && u < 0xDC00 && i+1 < len(units) && units[i+1] >= 0xDC00 && units[i+1] < 0xE000:
+			b.WriteRune(utf16.DecodeRune(rune(u), rune(units[i+1])))
+			i++
+		case u >= 0xD800 && u < 0xE000:
+			b.WriteByte('?')
+		default:
+			b.WriteRune(rune(u))
+		}
+	}
+	return b.String()
 }
