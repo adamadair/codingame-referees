@@ -15,6 +15,7 @@ on stdin and stdout, so local runners such as cg-brutaltester can use it.
 | `cg-game-of-drones` | Game of Drones |
 | `cg-coders-of-the-caribbean` | Coders of the Caribbean (league level 3) |
 | `cg-hypersonic` | Hypersonic (game versions 1-4) |
+| `cg-code-busters` | Code Busters (multiplayer puzzle, final league) |
 
 ```bash
 go install github.com/adamadair/codingame-referees/cmd/cg-game-of-drones@latest
@@ -26,6 +27,10 @@ go install github.com/adamadair/codingame-referees/cmd/cg-coders-of-the-caribbea
 
 ```bash
 go install github.com/adamadair/codingame-referees/cmd/cg-hypersonic@latest
+```
+
+```bash
+go install github.com/adamadair/codingame-referees/cmd/cg-code-busters@latest
 ```
 
 Every command has `-h` for its parameters and usage.
@@ -135,6 +140,13 @@ to redirect a hard-coded Java log path at test time.
 - Java fields that are `null` until init sets them can make the
   framework's init-error frame throw, so the referee stops without
   scores. Mirror that rather than drawing the frame from empty lists.
+- Quirks to keep, not fix: Code Busters calls `snapToGameZone(position)`
+  at spawn and discards the result, so busters can start off the map. It
+  sizes its score arrays for 2 players while accepting 4, so a 3- or
+  4-player game where all but one player dies crashes. Its `map`
+  parameter's parse loop always throws.
+- Copy message strings byte for byte: Code Busters' invalid-input text has
+  a non-breaking space before `RELEASE`.
 
 # List of Referees to Port
 1. Ghost in the cell
@@ -144,7 +156,7 @@ to redirect a hard-coded Java log path at test time.
 5. Mean Max
 6. Coders strike back
 7. Back to the Code
-8. Codebusters
+8. Codebusters (ported: `cg-code-busters`)
 9. Game of Drones (ported: `cg-game-of-drones`)
 10. Hypersonic (ported: `cg-hypersonic`)
 11. Smash the Code
