@@ -1,0 +1,31 @@
+# Binaries built at the repository root (go build ./cmd/...)
+/cg-*
+*.exe
+*.test
+/bin/
+/dist/
+
+# Go tooling
+*.out
+coverage.*
+go.work
+go.work.sum
+
+# Java classes from compiling referees or test generators by hand
+*.class
+
+# Referee logs (-l)
+*.log
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env
